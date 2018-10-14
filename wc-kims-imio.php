@@ -1,6 +1,7 @@
 <?php
 /*
 Plugin Name: KIMS Plugin
+Plugin URI: https://github.com/sultanimbayev/KimsPlugin
 Description: Плагин кастомизации сайта КИМС
 Version: 1.1.7
 Author: Sultan Imbayev
