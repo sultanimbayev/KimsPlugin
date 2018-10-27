@@ -74,50 +74,13 @@ class KimsPlugin{
             $subscr_product = wc_get_product($subscr_product_id);
         }
 
-        //Определяем пользователя
-        $logged_in = is_user_logged_in();
-        $current_user = (!$logged_in) ? null : wp_get_current_user();
-
-        //Определяем, была ли куплена статья/журнал
-        $product_is_bought = (!$logged_in) ? false : wc_customer_bought_product($current_user->user_email, $current_user->ID, $product->get_id());
-        
-        //Определяем, активна ли подписка
-        $has_subscription = false;
-        if($logged_in && $subscr_product_id != 0){
-            $has_subscription = wc_customer_bought_product($current_user->user_email, $current_user->ID, $subscr_product_id);
-        }
-        
-        //Шорткод для добавления товара в корзину, стандартный шорткод Woocommerce
-        $add_to_cart_sc = '[add_to_cart id="'.$product_id.'"]';
-        
-        //Используем шорткод для добавления в корзину товара, если ...
-        if(!$logged_in// пользователь не авторизован
-            || !$product->is_downloadable() // У продукта не бывает файлов для загрузки
-            || (!$product_is_bought && !$has_subscription)){ //Пользователь не купил этот товар, или не имеет подписки
-           
+        if(!($this->current_user_has_access_to($product, $subscr_product))){
+            //Шорткод для добавления товара в корзину, стандартный шорткод Woocommerce
+            $add_to_cart_sc = '[add_to_cart id="'.$product_id.'"]';
             return do_shortcode($add_to_cart_sc);
         }
-        
-        //Добавляем файлы в подписку, если таких файлов нет в подписке
-        $files_added_to_subscription = false;
-        if($has_subscription && !$product_is_bought){
-            $downloads = $product->get_downloads();
-            $subscr_downloads = $subscr_product->get_downloads();
-            foreach( $downloads as $key => $each_download ) {
-                if(!$subscr_product->has_file($key)){
-                    $subscr_downloads[$key] = array(
-                        'name' => $each_download['name'],
-                        'file' => $each_download['file']
-                    );
-                    $files_added_to_subscription = true;
-                }
-            }
 
-            if($files_added_to_subscription){
-                $subscr_product->set_downloads($subscr_downloads);
-            }
-
-        }
+        $this->make_access_for_subsription_files($product, $subscr_product);
 
         //Отображаем кнопки для загрузки файлов
         $downloads = $product->get_downloads();
@@ -126,6 +89,67 @@ class KimsPlugin{
             $links = $links.'<a href="'.$each_download['file'].'" class="kims_buy_button">'.__('Download', 'КИМС').' '.$each_download['name'].'</a>';
         }
         return $links;
+    }
+
+
+    function current_user_has_access_to($product, $subscr_product){
+        
+        if(!is_user_logged_in()){ 
+            return false; // пользователь не авторизован
+        }
+
+        //Определяем пользователя
+        $current_user = wp_get_current_user();
+
+        //Определяем, была ли куплена статья/журнал
+        $product_is_bought = wc_customer_bought_product($current_user->user_email, $current_user->ID, $product->get_id());
+        
+        //Определяем, активна ли подписка
+        $has_subscription = $this->customer_has_subscription($current_user->ID, $subscr_product->get_id());
+
+        if(!$product->is_downloadable() // У продукта не бывает файлов для загрузки
+            || (!$product_is_bought && !$has_subscription)){ //Пользователь не купил этот товар, или не имеет подписки
+           
+            return false;
+        }
+        return true;
+    }
+
+    function customer_has_subscription($user_id, $subscr_product_id){
+        $query_file = dirname(__FILE__).'/sql/user_has_subscription.sql';
+        $query = file_get_contents($query_file);
+        
+        global $wpdb;
+
+        $query = str_replace('{table_prefix}', $wpdb->prefix, $query);
+        $query = str_replace('{user_id}', $user_id, $query);
+        $query = str_replace('{subscr_product_id}', $subscr_product_id, $query);
+        $exists = $wpdb->get_var($query);
+
+        return $exists <= 0 ? false : true;
+
+    }
+
+    function make_access_for_subsription_files($product, $subscr_product){
+
+        //Добавляем файлы в подписку, если таких файлов нет в подписке
+        $files_added_to_subscription = false;
+        $downloads = $product->get_downloads();
+        $subscr_downloads = $subscr_product->get_downloads();
+        foreach( $downloads as $key => $each_download ) {
+            if(!$subscr_product->has_file($key)){
+                $subscr_downloads[$key] = array(
+                    'name' => $each_download['name'],
+                    'file' => $each_download['file']
+                );
+                $files_added_to_subscription = true;
+            }
+        }
+
+        if($files_added_to_subscription){
+            $subscr_product->set_downloads($subscr_downloads);
+            $subscr_product->save();
+        }
     }
 
     //Скрытие текта с помощью тэга <pre>
