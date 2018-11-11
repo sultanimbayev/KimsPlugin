@@ -9,5 +9,5 @@ join `{table_prefix}woocommerce_order_itemmeta` ordermeta on _order.order_item_i
 where post.`post_type` = 'shop_subscription'
     and meta_user.meta_value = {user_id}
     and ordermeta.meta_key = '_product_id'
-    and ordermeta.meta_value = {subscr_product_id}
+    and ordermeta.meta_value in ({subscr_product_ids})
     and post.post_status in ('wc-completed', 'wc-active')
