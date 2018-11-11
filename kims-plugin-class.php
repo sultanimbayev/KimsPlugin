@@ -3,9 +3,11 @@
 class KimsPlugin{
 
     public $kims_buy_button;
+    public $kims_exchange_rates;
 
     function __construct(){
         $this->kims_buy_button = new KimsBuyButton();
+        $this->kims_exchange_rates = new KimsExchangeRates();
     }
 
     //Инициализация стилей css
@@ -34,31 +36,25 @@ class KimsPlugin{
     }
 
     //Функция активации плагина
-    static function activate(){
-        if(!wp_next_scheduled('kims_update_rates')){
-            add_action('kims_update_rates', array('KimsPlugin', 'retreive_and_update_rates'));
-            wp_schedule_event( time(), 'hourly', 'kims_update_rates');
-        }
+    function activate(){
+        $this->kims_exchange_rates->activate();
     }
 
-    static function deactivate(){
-        if(wp_next_scheduled('kims_update_rates')){ wp_clear_scheduled_hook('kims_update_rates'); }
-    }
-
-    static function retreive_and_update_rates(){
-        $rates = new KimsExchangeRates();
-        $rates->retreive_and_update_rates();
+    //Функция деактивации плагина
+    function deactivate(){
+        $this->kims_exchange_rates->deactivate();
     }
 
     //Функция удаления плагина
     static function uninstall(){
-        if(wp_next_scheduled('kims_update_rates')){ wp_clear_scheduled_hook('kims_update_rates'); }
+        
     }
 
     //Функция вызывается при каждом обновлении страницы
     function always(){
         $this->load_kims_plugin_scripts();
-        $this->kims_buy_button->activate();
+        $this->kims_buy_button->always();
+        $this->kims_exchange_rates->always();
     }
 
 }

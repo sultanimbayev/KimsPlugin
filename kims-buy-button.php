@@ -17,7 +17,7 @@ class KimsBuyButton{
 
     }
 
-    function activate(){
+    function always(){
         $this->activate_shortcode();
     }
 

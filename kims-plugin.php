@@ -19,11 +19,12 @@ require_once(dirname(__FILE__)."/kims-exchange-rates.php");
 require_once(dirname(__FILE__)."/kims-functions.php");
 require_once(dirname(__FILE__)."/kims-translator.php");
 
-register_activation_hook(__FILE__, array('KimsPlugin', 'activate'));
-register_deactivation_hook(__FILE__, array('KimsPlugin', 'deactivate'));
 register_uninstall_hook(__FILE__, array('KimsPlugin', 'uninstall'));
 
 $KimsPlugin = new KimsPlugin();
+
+register_activation_hook(__FILE__, array($KimsPlugin, 'activate'));
+register_deactivation_hook(__FILE__, array($KimsPlugin, 'deactivate'));
 
 if($KimsPlugin->ready()){
     $KimsPlugin->always();
