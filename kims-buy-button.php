@@ -32,7 +32,7 @@ class KimsBuyButton{
     }
 
     //Обработчик шорткода "kims_buy_button"
-    function handler($atts){
+    function kims_buy_button_handler($atts){
 
         //Значения по умолчанию
         $a = shortcode_atts(
