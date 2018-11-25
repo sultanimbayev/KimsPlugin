@@ -1,5 +1,8 @@
 <?php
 
+define('__kbb', 'kims_buy_button');
+define('__kbb_action', 'add_shortcode_kims_buy_button');
+
 class KimsBuyButton{
     
     var $translator;
@@ -19,16 +22,17 @@ class KimsBuyButton{
 
     function always(){
         $this->activate_shortcode();
+        add_action( 'fusion_builder_before_init', array($this, 'add_buy_button_to_fusion_builder'));
     }
 
     //Активация шорткода "kims_buy_button"
     function activate_shortcode(){
-        add_action('add_shortcode_kims_buy_button', array($this, 'activate_shortcode_handler'));
-        do_action('add_shortcode_kims_buy_button');
+        add_action(__kbb_action, array($this, 'activate_shortcode_handler'));
+        do_action(__kbb_action);
     }
 
     function activate_shortcode_handler(){
-        add_shortcode('kims_buy_button', array($this, 'kims_buy_button_handler'));
+        add_shortcode(__kbb, array($this, 'kims_buy_button_handler'));
     }
 
     //Обработчик шорткода "kims_buy_button"
@@ -72,7 +76,7 @@ class KimsBuyButton{
 
     function kims_downoad_links($product){
         $downloads = $product->get_downloads();
-        $downloadStr = $this->translator->translate('Скачать', 'КИМС');
+        $downloadStr = $this->translator->translate('Скачать');
         $links = '';
         foreach( $downloads as $key => $each_download ) {
             $links .= $links.'<a href="';
@@ -151,8 +155,29 @@ class KimsBuyButton{
         
     }
 
+    function add_buy_button_to_fusion_builder() {
+
+        fusion_builder_map( 
+            array(
+                'name'            => esc_attr__( 'KIMS BuyButton', 'fusion-builder' ),
+                'shortcode'       => __kbb,
+                'generator_only'  => true,
+                'params'          => array(
+                    array(
+                        'type'        => 'textfield',
+                        'heading'     => esc_attr__( 'ID товара', 'kims-imio' ),
+                        'description' => esc_attr__( 'ID товара статьи в WooCommerce', 'kims-imio' ),
+                        'param_name'  => 'product_id',
+                        'value'       => esc_attr__( '', 'kims-imio' ),
+                    ),
+                ),
+            ) 
+        );
+    }
+    
+
     function get_subscription_product_ids(){
-        return array(2703);
+        return array(2703, 3429, 3431);
     }
 
 }

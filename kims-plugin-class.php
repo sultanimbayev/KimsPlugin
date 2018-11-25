@@ -4,10 +4,12 @@ class KimsPlugin{
 
     public $kims_buy_button;
     public $kims_exchange_rates;
+    public $kims_translator;
 
     function __construct(){
         $this->kims_buy_button = new KimsBuyButton();
         $this->kims_exchange_rates = new KimsExchangeRates();
+        $this->kims_translator = new KimsTranslator();
     }
 
     //Инициализация стилей css
@@ -28,6 +30,13 @@ class KimsPlugin{
     //Проверка установлен ли плагин woocommerce
     function woocommerce_is_present(){
         return in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')));
+    }
+
+    function add_to_cart_text_filter($text){
+        if(strcasecmp($text, "Sign up now") == 0) {
+            return $this->kims_translator->translate($text);
+        }
+        return $text;
     }
 
     //данная функция показывает готовность активации данного плагина
@@ -55,6 +64,8 @@ class KimsPlugin{
         $this->load_kims_plugin_scripts();
         $this->kims_buy_button->always();
         $this->kims_exchange_rates->always();
+        add_filter('woocommerce_product_add_to_cart_text', array($this, 'add_to_cart_text_filter'));
+        //add_filter('woocommerce_pay_order_button_text', array($this, 'add_to_cart_text_filter'));
     }
 
 }

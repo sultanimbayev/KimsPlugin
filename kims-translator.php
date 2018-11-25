@@ -1,15 +1,20 @@
 <?php
 
+add_action('init', function(){
+    if(!function_exists('pll_register_string')){ return; }
+    pll_register_string('_kims_buy_button__download_text', 'Скачать', 'КИМС');
+    pll_register_string('_wcs_sign_up_now', 'Sign Up Now', 'КИМС');
+});
+
 class KimsTranslator{
-    function translate($string, $group = 'KIMS_Plugin'){
-        if($this->polylang_is_present()){
-            pll_register_string( 'KIMS_Plugin', $string, $group);
+
+    function translate($string){
+        if(function_exists('pll__')){
             return pll__($string);
         }
-        return __($string);
-    }
-
-    function polylang_is_present(){
-        return in_array('polylang/polylang.php', apply_filters('active_plugins', get_option('active_plugins')));
+        if(function_exist('__')){
+            return __($string);
+        }
+        return $string;
     }
 }
